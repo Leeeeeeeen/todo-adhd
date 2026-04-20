@@ -92,8 +92,9 @@ export const useStore = create<StoreState>()(
 
         const { currentUser } = get()
         if (currentUser) {
-          upsertTask(task, currentUser.id).catch(() => {
-            set((state) => ({ tasks: state.tasks.filter((t) => t.id !== task.id) }))
+          upsertTask(task, currentUser.id).catch((err) => {
+            // ローカルのタスクは消さない。同期エラーのみ記録。
+            set({ syncStatus: 'error', syncError: err instanceof Error ? err.message : '同期に失敗しました' })
           })
         }
 
@@ -271,8 +272,8 @@ export const useStore = create<StoreState>()(
     {
       name: 'todo-adhd-storage',
       partialize: (state) => ({
-        // ログイン中はタスクをLocalStorageに保存しない（クラウドが正）
-        tasks: state.currentUser ? [] : state.tasks,
+        // ログイン中もローカルにキャッシュしておく（クラウド同期失敗時のフォールバック）
+        tasks: state.tasks,
         settings: state.settings,
       }),
     }
