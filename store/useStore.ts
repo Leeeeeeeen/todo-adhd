@@ -102,7 +102,6 @@ export const useStore = create<StoreState>()(
       },
 
       updateTask: (id, updates) => {
-        const previous = get().tasks.find((t) => t.id === id)
         set((state) => ({
           tasks: state.tasks.map((t) => (t.id === id ? { ...t, ...updates } : t)),
         }))
@@ -111,27 +110,22 @@ export const useStore = create<StoreState>()(
         if (currentUser) {
           const updated = get().tasks.find((t) => t.id === id)
           if (updated) {
-            upsertTask(updated, currentUser.id).catch(() => {
-              if (previous) {
-                set((state) => ({
-                  tasks: state.tasks.map((t) => (t.id === id ? previous : t)),
-                }))
-              }
+            upsertTask(updated, currentUser.id).catch((err) => {
+              // ローカルの変更は消さない。同期エラーのみ記録。
+              set({ syncStatus: 'error', syncError: err instanceof Error ? err.message : '同期に失敗しました' })
             })
           }
         }
       },
 
       deleteTask: (id) => {
-        const previous = get().tasks.find((t) => t.id === id)
         set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) }))
 
         const { currentUser } = get()
         if (currentUser) {
-          dbDeleteTask(id, currentUser.id).catch(() => {
-            if (previous) {
-              set((state) => ({ tasks: [previous, ...state.tasks] }))
-            }
+          dbDeleteTask(id, currentUser.id).catch((err) => {
+            // ローカルの削除は維持。同期エラーのみ記録。
+            set({ syncStatus: 'error', syncError: err instanceof Error ? err.message : '同期に失敗しました' })
           })
         }
       },
