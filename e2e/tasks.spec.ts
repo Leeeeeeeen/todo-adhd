@@ -15,29 +15,27 @@ const TEST_PASSWORD = process.env.TEST_PASSWORD ?? 'testpassword123'
 // ────────────────────────────────────────────
 test.describe('ゲストモード: タスク基本操作', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/')
     // ローカルストレージをクリアしてクリーンな状態にする
+    await page.goto('/')
     await page.evaluate(() => localStorage.clear())
     await page.reload()
-    // ゲストとして使う（リダイレクトされた場合はログインせずに使うを押す）
+    // ゲストとして使う
     const guestLink = page.getByRole('link', { name: 'ログインせずに使う →' })
-    if (await guestLink.isVisible()) {
+    if (await guestLink.isVisible({ timeout: 3000 }).catch(() => false)) {
       await guestLink.click()
     }
+    await page.goto('/todos')
   })
 
   test('タスクを追加できる', async ({ page }) => {
-    // タスク追加ボタンを探す
-    const addButton = page.getByRole('button', { name: /タスクを追加|新しいタスク|\+/i }).first()
-    await addButton.click()
+    // 「+ 追加」ボタンをクリック
+    await page.getByRole('button', { name: '+ 追加' }).click()
 
-    // タスク入力フォームに入力
-    const input = page.getByPlaceholder(/タスクを入力|タイトル/i)
-    await input.fill('E2Eテスト用タスク')
+    // モーダルが開いたら「何をやる？」プレースホルダーの入力欄に入力
+    await page.getByPlaceholder('何をやる？').fill('E2Eテスト用タスク')
 
-    // 保存
-    const saveButton = page.getByRole('button', { name: /追加|保存|作成/i })
-    await saveButton.click()
+    // 「追加する」ボタンで保存（exact: true で他のボタンと区別）
+    await page.getByRole('button', { name: '追加する', exact: true }).click()
 
     await expect(page.getByText('E2Eテスト用タスク')).toBeVisible({ timeout: 5000 })
   })
@@ -47,68 +45,78 @@ test.describe('ゲストモード: タスク基本操作', () => {
 // ログイン済みユーザーのテスト
 // ────────────────────────────────────────────
 test.describe('ログイン済み: タスク操作', () => {
-  // ログイン状態を共有するために storage state を利用
   test.beforeEach(async ({ page }) => {
     await loginIfNeeded(page)
+    await page.goto('/todos')
   })
 
   test('タスク一覧ページが表示される', async ({ page }) => {
-    await page.goto('/todos')
-    // ページが表示されることを確認（ログインリダイレクトがないこと）
-    await expect(page).toHaveURL('/todos', { timeout: 10000 })
+    await expect(page.getByRole('heading', { name: 'タスク一覧' })).toBeVisible()
+    await expect(page.getByRole('button', { name: '+ 追加' })).toBeVisible()
   })
 
   test('タスクを追加して一覧に表示される', async ({ page }) => {
-    await page.goto('/todos')
-
     const taskTitle = `テストタスク_${Date.now()}`
     await addTask(page, taskTitle)
 
+    // フィルターが「未着手」なので追加したタスクが表示されるはず
     await expect(page.getByText(taskTitle)).toBeVisible({ timeout: 5000 })
   })
 
   test('タスクを完了としてマークできる', async ({ page }) => {
-    await page.goto('/todos')
-
     const taskTitle = `完了テスト_${Date.now()}`
     await addTask(page, taskTitle)
 
-    // タスクの完了ボタンをクリック（チェックボックスまたは完了ボタン）
-    const taskItem = page.getByText(taskTitle).locator('..').locator('..')
-    const completeBtn = taskItem.getByRole('button', { name: /完了|チェック/i }).first()
-    if (await completeBtn.isVisible()) {
-      await completeBtn.click()
-    } else {
-      // チェックボックス的な要素を探す
-      const checkbox = taskItem.locator('button, [role="checkbox"]').first()
-      await checkbox.click()
-    }
+    await expect(page.getByText(taskTitle)).toBeVisible({ timeout: 5000 })
 
-    // アニメーション完了を待つ
-    await page.waitForTimeout(800)
+    // タスクアイテムの円形チェックボタンをクリック（完了アニメーション）
+    const taskRow = page.getByText(taskTitle).locator('../../../..')
+    await taskRow.locator('button.rounded-full').first().click()
 
-    // 完了タブやフィルターで確認（実装に応じて調整）
+    // アニメーション完了まで待機 (600ms + 余裕)
+    await page.waitForTimeout(1000)
+
+    // 「未着手」フィルターでは完了タスクは非表示になる
+    await expect(page.getByText(taskTitle)).not.toBeVisible({ timeout: 5000 })
+
+    // 「完了」フィルターに切り替えて確認
+    await page.getByRole('button', { name: '完了' }).click()
     await expect(page.getByText(taskTitle)).toBeVisible({ timeout: 5000 })
   })
 
   test('タスクを削除できる', async ({ page }) => {
-    await page.goto('/todos')
-
     const taskTitle = `削除テスト_${Date.now()}`
     await addTask(page, taskTitle)
 
-    // 削除操作（スワイプ、削除ボタン、コンテキストメニューなど実装に応じる）
-    const taskItem = page.getByText(taskTitle).locator('..').locator('..')
-    const deleteBtn = taskItem.getByRole('button', { name: /削除|ゴミ箱/i }).first()
-    if (await deleteBtn.isVisible()) {
-      await deleteBtn.click()
-      // 確認ダイアログがある場合
-      const confirmBtn = page.getByRole('button', { name: /OK|はい|削除/i })
-      if (await confirmBtn.isVisible({ timeout: 1000 })) {
-        await confirmBtn.click()
-      }
-      await expect(page.getByText(taskTitle)).not.toBeVisible({ timeout: 5000 })
-    }
+    await expect(page.getByText(taskTitle)).toBeVisible({ timeout: 5000 })
+
+    // タスク行をホバーして削除ボタン（✕）を表示
+    const taskRow = page.getByText(taskTitle).locator('../../../..')
+    await taskRow.hover()
+
+    // ✕ボタン（title="削除"）をクリック
+    await taskRow.locator('button[title="削除"]').click()
+
+    // 確認ダイアログが出るので「削除」ボタンを押す
+    await page.getByRole('button', { name: '削除' }).click()
+
+    await expect(page.getByText(taskTitle)).not.toBeVisible({ timeout: 5000 })
+  })
+
+  test('タスクを後回しにできる', async ({ page }) => {
+    const taskTitle = `後回しテスト_${Date.now()}`
+    await addTask(page, taskTitle)
+
+    await expect(page.getByText(taskTitle)).toBeVisible({ timeout: 5000 })
+
+    // ホバーして後回しボタン（title="後回し"）をクリック
+    const taskRow = page.getByText(taskTitle).locator('../../../..')
+    await taskRow.hover()
+    await taskRow.locator('button[title="後回し"]').click()
+
+    // postponeCount が増えたことを確認（3回以上で警告バッジが表示される）
+    // まずは1回なので警告はない — エラーにならないことを確認
+    await expect(page.getByText(taskTitle)).toBeVisible()
   })
 })
 
@@ -119,41 +127,21 @@ test.describe('ログイン済み: タスク操作', () => {
 async function loginIfNeeded(page: Page) {
   await page.goto('/')
 
-  // すでにログイン済みならスキップ
+  // ログインリンクが表示されていたらログインフローへ
   const loginLink = page.getByRole('link', { name: 'ログインせずに使う →' })
-  if (!(await loginLink.isVisible({ timeout: 2000 }).catch(() => false))) {
-    return // すでにログイン済み
-  }
+  const needsLogin = await loginLink.isVisible({ timeout: 3000 }).catch(() => false)
+  if (!needsLogin) return
 
   await page.goto('/auth/login')
-  await page.getByLabel('メールアドレス').fill(TEST_EMAIL)
-  await page.getByLabel('パスワード').fill(TEST_PASSWORD)
+  await page.locator('input[type="email"]').fill(TEST_EMAIL)
+  await page.locator('input[type="password"]').fill(TEST_PASSWORD)
   await page.getByRole('button', { name: 'ログイン' }).click()
   await expect(page).toHaveURL('/', { timeout: 15000 })
 }
 
 async function addTask(page: Page, title: string) {
-  // タスク追加ボタンを探してクリック
-  const addButton = page
-    .getByRole('button', { name: /タスクを追加|新しいタスク|\+|追加/i })
-    .first()
-
-  // ボタンが見えない場合はフローティングボタンを探す
-  if (await addButton.isVisible()) {
-    await addButton.click()
-  } else {
-    await page.locator('button[aria-label*="追加"], button[aria-label*="add"]').first().click()
-  }
-
-  // タイトル入力
-  const titleInput = page
-    .getByPlaceholder(/タスクを入力|タイトル|例：/i)
-    .first()
-  await titleInput.fill(title)
-
-  // 保存ボタン
-  const saveBtn = page.getByRole('button', { name: /追加|保存|作成/i }).last()
-  await saveBtn.click()
-
+  await page.getByRole('button', { name: '+ 追加' }).click()
+  await page.getByPlaceholder('何をやる？').fill(title)
+  await page.getByRole('button', { name: '追加する', exact: true }).click()
   await page.waitForTimeout(300)
 }
