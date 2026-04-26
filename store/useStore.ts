@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { v4 as uuidv4 } from 'uuid'
-import { Task, UserSettings, FocusSession, Priority, EstimatedTime, AuthUser, SyncStatus } from '@/types'
+import { Task, UserSettings, FocusSession, Priority, EstimatedTime, AuthUser, SyncStatus, PomodoroSettings } from '@/types'
 import {
   fetchAllTasks,
   upsertTask,
@@ -14,6 +14,7 @@ import {
 interface StoreState {
   tasks: Task[]
   settings: UserSettings
+  pomodoroSettings: PomodoroSettings
   focusSession: FocusSession | null
   quickCaptureOpen: boolean
   currentUser: AuthUser | null
@@ -31,6 +32,7 @@ interface StoreState {
 
   // Settings actions
   updateSettings: (settings: Partial<UserSettings>) => void
+  updatePomodoroSettings: (settings: Partial<PomodoroSettings>) => void
 
   // Focus session
   startFocus: (taskId: string) => void
@@ -44,6 +46,15 @@ interface StoreState {
   setCurrentUser: (user: AuthUser | null) => void
   loadFromCloud: (userId: string) => Promise<void>
   signOut: () => Promise<void>
+}
+
+const defaultPomodoroSettings: PomodoroSettings = {
+  workMinutes: 25,
+  shortBreakMinutes: 5,
+  longBreakMinutes: 15,
+  longBreakInterval: 4,
+  autoStartBreaks: false,
+  autoStartWork: false,
 }
 
 const defaultSettings: UserSettings = {
@@ -73,6 +84,7 @@ export const useStore = create<StoreState>()(
     (set, get) => ({
       tasks: [],
       settings: defaultSettings,
+      pomodoroSettings: defaultPomodoroSettings,
       focusSession: null,
       quickCaptureOpen: false,
       currentUser: null,
@@ -175,6 +187,10 @@ export const useStore = create<StoreState>()(
         }
       },
 
+      updatePomodoroSettings: (updates) => {
+        set((state) => ({ pomodoroSettings: { ...state.pomodoroSettings, ...updates } }))
+      },
+
       startFocus: (taskId) => {
         set({
           focusSession: {
@@ -269,6 +285,7 @@ export const useStore = create<StoreState>()(
         // ログイン中もローカルにキャッシュしておく（クラウド同期失敗時のフォールバック）
         tasks: state.tasks,
         settings: state.settings,
+        pomodoroSettings: state.pomodoroSettings,
       }),
     }
   )

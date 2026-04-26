@@ -37,6 +37,15 @@ export interface FocusSession {
   interruptions: number
 }
 
+export interface PomodoroSettings {
+  workMinutes: number        // default 25
+  shortBreakMinutes: number  // default 5
+  longBreakMinutes: number   // default 15
+  longBreakInterval: number  // default 4 (pomodoros before long break)
+  autoStartBreaks: boolean
+  autoStartWork: boolean
+}
+
 export interface AuthUser {
   id: string
   email: string | undefined
