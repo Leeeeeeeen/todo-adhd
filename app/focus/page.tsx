@@ -67,12 +67,20 @@ export default function FocusPage() {
   const router = useRouter()
   const task = focusSession ? tasks.find((t) => t.id === focusSession.taskId) : null
 
+  const [mounted, setMounted] = useState(false)
   const [phase, setPhase] = useState<Phase>('work')
   const [pomodoroCount, setPomodoroCount] = useState(0)
   const [totalPomodoros, setTotalPomodoros] = useState(0)
-  const [secondsLeft, setSecondsLeft] = useState(pomodoroSettings.workMinutes * 60)
+  const [secondsLeft, setSecondsLeft] = useState(25 * 60) // SSR-safe default
   const [isRunning, setIsRunning] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+
+  // Sync with persisted settings after hydration
+  useEffect(() => {
+    setMounted(true)
+    setSecondsLeft(pomodoroSettings.workMinutes * 60)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Refs to avoid stale closures
   const phaseRef = useRef(phase)
@@ -150,6 +158,8 @@ export default function FocusPage() {
   }
 
   const cyclePos = pomodoroCount % pomodoroSettings.longBreakInterval
+
+  if (!mounted) return null
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[70vh] gap-6 pb-8">

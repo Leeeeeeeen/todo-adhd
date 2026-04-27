@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react'
 import { getDayRemainingSeconds, getDayProgressPercent, formatDayDisplay } from '@/lib/countdown'
 
 export default function DayCountdown() {
-  const [seconds, setSeconds] = useState(getDayRemainingSeconds())
-  const [progress, setProgress] = useState(getDayProgressPercent())
+  const [seconds, setSeconds] = useState(0)
+  const [progress, setProgress] = useState(0)
 
   useEffect(() => {
+    setSeconds(getDayRemainingSeconds())
+    setProgress(getDayProgressPercent())
     const timer = setInterval(() => {
       setSeconds(getDayRemainingSeconds())
       setProgress(getDayProgressPercent())
