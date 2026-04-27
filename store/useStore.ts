@@ -249,10 +249,11 @@ export const useStore = create<StoreState>()(
               settings: {
                 ...state.settings,
                 birthDate: cloudSettings.birth_date ?? state.settings.birthDate,
-                expectedLifespan: cloudSettings.expected_lifespan,
-                showLifeCountdown: cloudSettings.show_life_countdown,
-                theme: cloudSettings.theme as UserSettings['theme'],
-                name: cloudSettings.display_name,
+                expectedLifespan: cloudSettings.expected_lifespan ?? state.settings.expectedLifespan,
+                showLifeCountdown: cloudSettings.show_life_countdown ?? state.settings.showLifeCountdown,
+                theme: (cloudSettings.theme as UserSettings['theme']) ?? state.settings.theme,
+                name: cloudSettings.display_name ?? state.settings.name,
+                // goalType / goalAge / goalDate はクラウドに未対応のためローカルを維持
               },
             }))
           }

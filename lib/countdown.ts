@@ -43,8 +43,9 @@ export function getGoalTargetDate(
   }
   if (!birthDate) return null
   const birth = new Date(birthDate)
+  if (isNaN(birth.getTime())) return null
   const target = new Date(birth)
-  target.setFullYear(birth.getFullYear() + goalAge)
+  target.setFullYear(birth.getFullYear() + (goalAge ?? 80))
   return target
 }
 
