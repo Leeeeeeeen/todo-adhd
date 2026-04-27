@@ -33,10 +33,10 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      {/* Life countdown */}
+      {/* Goal countdown */}
       <section className="bg-gray-800/60 border border-gray-700 rounded-2xl p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">人生カウントダウン</h2>
+          <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider">目標カウントダウン</h2>
           <button
             onClick={() => updateSettings({ showLifeCountdown: !settings.showLifeCountdown })}
             className={`relative w-12 h-6 rounded-full transition-colors ${
@@ -52,37 +52,76 @@ export default function SettingsPage() {
         </div>
 
         <p className="text-xs text-gray-600">
-          人生の残り時間を表示します。心理的な影響を考慮し、デフォルトはOFFです。
+          設定した年齢や日付までの残り時間を表示します。
         </p>
 
-        <div>
-          <label className="text-sm text-gray-400 block mb-2">生年月日</label>
-          <input
-            type="date"
-            value={settings.birthDate}
-            onChange={(e) => updateSettings({ birthDate: e.target.value })}
-            className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-sm"
-          />
+        {/* Goal type selector */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => updateSettings({ goalType: 'age' })}
+            className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${
+              settings.goalType === 'age'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-700 text-gray-400 hover:text-white'
+            }`}
+          >
+            年齢で設定
+          </button>
+          <button
+            onClick={() => updateSettings({ goalType: 'date' })}
+            className={`flex-1 py-2 rounded-xl text-sm font-medium transition-colors ${
+              settings.goalType === 'date'
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-700 text-gray-400 hover:text-white'
+            }`}
+          >
+            日付で設定
+          </button>
         </div>
 
-        <div>
-          <label className="text-sm text-gray-400 block mb-2">
-            想定寿命: <span className="text-white font-medium">{settings.expectedLifespan}歳</span>
-          </label>
-          <input
-            type="range"
-            min={60}
-            max={120}
-            value={settings.expectedLifespan}
-            onChange={(e) => updateSettings({ expectedLifespan: Number(e.target.value) })}
-            className="w-full accent-indigo-500"
-          />
-          <div className="flex justify-between text-xs text-gray-600 mt-1">
-            <span>60歳</span>
-            <span>85歳（デフォルト）</span>
-            <span>120歳</span>
+        {settings.goalType === 'age' && (
+          <>
+            <div>
+              <label className="text-sm text-gray-400 block mb-2">生年月日</label>
+              <input
+                type="date"
+                value={settings.birthDate}
+                onChange={(e) => updateSettings({ birthDate: e.target.value })}
+                className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-gray-400 block mb-2">
+                目標年齢: <span className="text-white font-medium">{settings.goalAge ?? 80}歳</span>
+              </label>
+              <input
+                type="range"
+                min={1}
+                max={120}
+                value={settings.goalAge ?? 80}
+                onChange={(e) => updateSettings({ goalAge: Number(e.target.value) })}
+                className="w-full accent-indigo-500"
+              />
+              <div className="flex justify-between text-xs text-gray-600 mt-1">
+                <span>1歳</span>
+                <span>60歳（定年）</span>
+                <span>120歳</span>
+              </div>
+            </div>
+          </>
+        )}
+
+        {settings.goalType === 'date' && (
+          <div>
+            <label className="text-sm text-gray-400 block mb-2">目標日</label>
+            <input
+              type="date"
+              value={settings.goalDate ?? ''}
+              onChange={(e) => updateSettings({ goalDate: e.target.value })}
+              className="w-full bg-gray-700 border border-gray-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-sm"
+            />
           </div>
-        </div>
+        )}
       </section>
 
       {/* Sync / Account */}

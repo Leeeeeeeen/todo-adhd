@@ -22,8 +22,11 @@ export interface Task {
 
 export interface UserSettings {
   birthDate: string // ISO date string e.g. "1990-01-01"
-  expectedLifespan: number // years, default 85
+  expectedLifespan: number // years, kept for backwards compat
   showLifeCountdown: boolean
+  goalType: 'age' | 'date' // countdown to age or specific date
+  goalAge: number // target age, default 80
+  goalDate: string // target date ISO string e.g. "2030-12-31"
   theme: 'light' | 'dark' | 'auto'
   name: string
 }

@@ -31,6 +31,56 @@ export function getYearProgressPercent(): number {
   return Math.min(100, Math.floor((elapsed / total) * 100))
 }
 
+export function getGoalTargetDate(
+  goalType: 'age' | 'date',
+  birthDate: string,
+  goalAge: number,
+  goalDate: string
+): Date | null {
+  if (goalType === 'date') {
+    if (!goalDate) return null
+    return new Date(goalDate + 'T23:59:59')
+  }
+  if (!birthDate) return null
+  const birth = new Date(birthDate)
+  const target = new Date(birth)
+  target.setFullYear(birth.getFullYear() + goalAge)
+  return target
+}
+
+export function getGoalRemainingSeconds(
+  goalType: 'age' | 'date',
+  birthDate: string,
+  goalAge: number,
+  goalDate: string
+): number {
+  const target = getGoalTargetDate(goalType, birthDate, goalAge, goalDate)
+  if (!target) return 0
+  return Math.max(0, Math.floor((target.getTime() - Date.now()) / 1000))
+}
+
+export function getGoalProgressPercent(
+  goalType: 'age' | 'date',
+  birthDate: string,
+  goalAge: number,
+  goalDate: string
+): number {
+  const target = getGoalTargetDate(goalType, birthDate, goalAge, goalDate)
+  if (!target) return 0
+  let start: Date
+  if (goalType === 'date') {
+    start = new Date() // progress from now is not meaningful; use a fixed origin
+    // For date type, show % of year elapsed toward goal from Jan 1 of current year
+    start = new Date(new Date().getFullYear(), 0, 1)
+  } else {
+    if (!birthDate) return 0
+    start = new Date(birthDate)
+  }
+  const total = target.getTime() - start.getTime()
+  const elapsed = Date.now() - start.getTime()
+  return Math.min(100, Math.max(0, Math.floor((elapsed / total) * 100)))
+}
+
 export function getLifeRemainingSeconds(birthDate: string, expectedLifespan: number): number {
   const birth = new Date(birthDate)
   const death = new Date(birth)

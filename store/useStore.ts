@@ -61,6 +61,9 @@ const defaultSettings: UserSettings = {
   birthDate: '',
   expectedLifespan: 85,
   showLifeCountdown: false,
+  goalType: 'age',
+  goalAge: 80,
+  goalDate: '',
   theme: 'dark',
   name: '',
 }
