@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import DayCountdown from '@/components/countdown/DayCountdown'
+import YearCountdown from '@/components/countdown/YearCountdown'
 import LifeCountdown from '@/components/countdown/LifeCountdown'
 import Top3Section from '@/components/todo/Top3Section'
 import AddTaskModal from '@/components/todo/AddTaskModal'
@@ -34,15 +35,11 @@ export default function Dashboard() {
       {/* Countdowns */}
       <div className="grid gap-4 md:grid-cols-2">
         <DayCountdown />
-        {settings.showLifeCountdown ? (
-          <LifeCountdown />
-        ) : (
-          <div className="bg-gray-800/40 border border-dashed border-gray-700 rounded-2xl p-6 flex flex-col items-center justify-center gap-2">
-            <p className="text-gray-600 text-sm text-center">人生カウントダウン</p>
-            <p className="text-gray-700 text-xs text-center">設定から有効にできます</p>
-          </div>
-        )}
+        <YearCountdown />
       </div>
+      {settings.showLifeCountdown && (
+        <LifeCountdown />
+      )}
 
       {/* Today's 3 */}
       <Top3Section onOpenAddTask={() => setAddTaskOpen(true)} />

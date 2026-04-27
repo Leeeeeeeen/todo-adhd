@@ -16,6 +16,21 @@ export function getDayProgressPercent(): number {
   return Math.min(100, Math.floor((elapsed / total) * 100))
 }
 
+export function getYearRemainingSeconds(): number {
+  const now = new Date()
+  const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999)
+  return Math.max(0, Math.floor((endOfYear.getTime() - now.getTime()) / 1000))
+}
+
+export function getYearProgressPercent(): number {
+  const now = new Date()
+  const startOfYear = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0)
+  const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999)
+  const total = endOfYear.getTime() - startOfYear.getTime()
+  const elapsed = now.getTime() - startOfYear.getTime()
+  return Math.min(100, Math.floor((elapsed / total) * 100))
+}
+
 export function getLifeRemainingSeconds(birthDate: string, expectedLifespan: number): number {
   const birth = new Date(birthDate)
   const death = new Date(birth)
