@@ -16,6 +16,36 @@ export function getDayProgressPercent(): number {
   return Math.min(100, Math.floor((elapsed / total) * 100))
 }
 
+export function getWeekRemainingSeconds(): number {
+  const now = new Date()
+  const endOfWeek = new Date(now)
+  // 週末（日曜23:59:59）まで
+  const daysUntilSunday = 7 - now.getDay()
+  endOfWeek.setDate(now.getDate() + (daysUntilSunday === 7 ? 0 : daysUntilSunday))
+  endOfWeek.setHours(23, 59, 59, 999)
+  return Math.max(0, Math.floor((endOfWeek.getTime() - now.getTime()) / 1000))
+}
+
+export function getWeekProgressPercent(): number {
+  const now = new Date()
+  // 週の始まりを月曜00:00:00とする
+  const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay() // 日曜=7
+  const startOfWeek = new Date(now)
+  startOfWeek.setDate(now.getDate() - (dayOfWeek - 1))
+  startOfWeek.setHours(0, 0, 0, 0)
+  const endOfWeek = new Date(startOfWeek)
+  endOfWeek.setDate(startOfWeek.getDate() + 6)
+  endOfWeek.setHours(23, 59, 59, 999)
+  const total = endOfWeek.getTime() - startOfWeek.getTime()
+  const elapsed = now.getTime() - startOfWeek.getTime()
+  return Math.min(100, Math.floor((elapsed / total) * 100))
+}
+
+export function getWeekDayLabel(): string {
+  const days = ['日', '月', '火', '水', '木', '金', '土']
+  return days[new Date().getDay()]
+}
+
 export function getYearRemainingSeconds(): number {
   const now = new Date()
   const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999)
