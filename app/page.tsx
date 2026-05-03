@@ -62,13 +62,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Add task CTA */}
-      <button
-        onClick={() => setAddTaskOpen(true)}
-        className="w-full py-3 border border-dashed border-gray-700 hover:border-indigo-600 hover:bg-indigo-600/5 rounded-xl text-gray-500 hover:text-indigo-400 text-sm transition-colors"
-      >
-        + タスクを追加する
-      </button>
+      {/* Add task CTA - Top3が3つ未満のときは非表示（Top3Section内のインライン入力を使う） */}
 
       <AddTaskModal open={addTaskOpen} onClose={() => setAddTaskOpen(false)} />
     </div>
